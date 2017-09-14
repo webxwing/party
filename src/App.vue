@@ -1,23 +1,26 @@
 <template>
   <div id="app">
-    <img src="./assets/logo.png">
-    <router-view></router-view>
+    <partyHeader></partyHeader>
+    <div class="auto">
+      <div class="main-content">
+        <div class="content">
+          <router-view></router-view>
+        </div>
+      </div>
+    </div>
+    <partyFooter></partyFooter>
   </div>
 </template>
 
 <script>
+import partyHeader from './components/Header.vue'
+import partyFooter from './components/Footer.vue'
 export default {
-  name: 'app'
+  name: 'app',
+  components: { partyHeader , partyFooter }
 }
 </script>
 
 <style>
-#app {
-  font-family: 'Avenir', Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
-}
+
 </style>
