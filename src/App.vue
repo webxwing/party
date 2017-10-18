@@ -4,7 +4,9 @@
     <div class="auto">
       <div class="main-content">
         <div class="content">
-          <router-view></router-view>
+          <!--<transition>-->
+            <router-view></router-view>
+          <!--</transition>-->
         </div>
       </div>
     </div>
@@ -22,5 +24,23 @@ export default {
 </script>
 
 <style>
-
+  .fade-enter{
+    opacity: 0;
+  }
+  .fade-leave{
+    opacity: 1;
+  }
+  .fade-enter-active{
+    transition: opacity .5s;
+    -moz-transition: opacity .5s;
+    -webkit-transition: opacity .5s;
+    -o-transition: opacity .5s;
+  }
+  .fade-leave-active{
+    opacity:0;
+    transition: opacity .5s;
+    -moz-transition: opacity .5s;
+    -webkit-transition: opacity .5s;
+    -o-transition: opacity .5s;
+  }
 </style>

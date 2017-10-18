@@ -57,6 +57,9 @@ table {
   border-spacing: 0;
 }
 /*全局样式*/
+a {
+  text-decoration: none;
+}
 header{
   width: 100%;
   height: 48px;
@@ -100,7 +103,7 @@ footer .foot-content {
 }
 .main-content {
   position: absolute!important;
-  position: relative;
+  /*position: relative;*/
   height: auto!important;
   height: 100%;
   width:960px;
@@ -114,6 +117,9 @@ footer .foot-content {
   overflow-y: scroll;
   overflow-x: hidden;
   background-color: #ffffff;
+}
+.el-tree {
+  overflow: auto;
 }
 /*页面样式*/
 
@@ -153,4 +159,5 @@ footer .foot-content {
   width: 45%;
   margin-right: 30px;
 }
+
 

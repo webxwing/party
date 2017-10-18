@@ -6,19 +6,25 @@
   <div class="bodyContent">
     <div class="btn-menu">
       <el-button-group>
-        <el-button type="primary" size="small">新建考核</el-button>
+        <el-button type="primary" size="small" @click="baseFun.gotoLink('new')">新建考核</el-button>
       </el-button-group>
     </div>
     <div class="main-table">
-      <el-table :data="workData" border>
-        <el-table-column prop="year" label="年度" sortable width="100"></el-table-column>
-        <el-table-column prop="title" label="标题" width="400"></el-table-column>
-        <el-table-column prop="state" label="状态" width="100"></el-table-column>
-        <el-table-column fixed="right" label="操作"  width="220">
+      <el-table :data="currentData" border>
+        <el-table-column prop="YEAR" label="年度" width="100">
+
+        </el-table-column>
+        <el-table-column prop="NAME" label="标题" width="400">
+        </el-table-column>
+        <el-table-column prop="STATUS" label="状态" width="100"></el-table-column>
+
+        <el-table-column fixed="right" label="操作"  width="250">
           <template scope="scope">
-            <el-button type="text" size="small">基本内容</el-button>
-            <el-button type="text" size="small">考核过程</el-button>
-            <el-button type="text" size="small">分类资源</el-button>
+            <el-button type="text" size="small" @click="baseFun.gotoLink({ name : 'new',params:{ row : scope.row } })">编辑</el-button>
+            <el-button type="text" size="small" @click="delParty(scope.row.SUBJECT_ID)">删除</el-button>
+            <el-button type="text" size="small" @click="baseFun.gotoLink({ path: '/admin/resource/'+scope.row.SUBJECT_ID})">资源设置</el-button>
+            <el-button type="text" size="small" @click="baseFun.gotoLink('process')">过程设置</el-button>
+
           </template>
         </el-table-column>
       </el-table>
@@ -27,7 +33,9 @@
     <div class="pagination">
       <el-pagination
         layout="prev, pager, next"
-        :total="70">
+        :page-size = "pageSize"
+        :total="workLength"
+        @current-change="handleCurChange">
       </el-pagination>
     </div>
     <div class="help">
@@ -41,37 +49,96 @@
 </div>
 </template>
 <script>
+    import store from '../common/store.js'
+    import qs from 'qs'
     export default {
       name: 'main',
       data() {
         return {
-          workData:[
-            {
-              id: '1',
-              year: '2017',
-              title: '2017年基层党建工作目标考核指标体系（一）',
-              state: '制定'
-            },
-            {
-              id: '2',
-              year: '2016',
-              title: '2016年基层党建工作目标考核指标体系（一）',
-              state: '发布'
-            },
-            {
-              id: '3',
-              year: '2016',
-              title: '2016年基层党建工作目标考核指标体系（二）',
-              state: '维护'
-            },
-            {
-              id: '4',
-              year: '2015',
-              title: '2015年基层党建工作目标考核指标体系（一）',
-              state: '完成'
-            }
-          ]
+          //所有数据
+          workData:[],
+          //当前显示页数据
+          currentData:[],
+          total: 1000,
+          pageSize: 5,
+          currentPage: 1
         }
+      },
+      computed:{
+        workLength(){
+          return this.workData? this.workData.length:0;
+        }
+      },
+      store,
+      methods: {
+        //页码发生变化
+        handleCurChange(evl){
+          this.currentPage = evl;
+          this.currentData = this.baseFun.pagination(evl,this.pageSize,this.workData);
+        },
+        //删除
+        delParty(subjectID){
+          this.$confirm('确定删除该考核？','提示',{
+            confimButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'warning'
+          }).then(()=>{
+            //确认删除
+            this.$http.post('/webapi/delParty',qs.stringify( {'session_id':this.$store.state.user.sessionID,'subject_id':subjectID })).then((d)=>{
+              if(d!==undefined && d.data.msg == 'success'){
+                this.$message({
+                  message:'删除成功！',
+                  type: 'info',
+                  duration: 1500
+                });
+                this.workData = this.workData.filter((w)=>{ return w.SUBJECT_ID != subjectID });
+                this.currentData = this.baseFun.pagination(this.currentPage,this.pageSize,this.workData);
+              }else{
+                this.$message({
+                  message:'删除失败:'+d.data.msg,
+                  type: 'warning',
+                  duration: 1500
+                });
+              }
+            })
+          });
+        }
+      },
+      beforeCreate(){
+        //登录验证
+        this.baseFun.isLoginGoTo();
+        //防止刷新数据丢失
+        store.commit('initialUser');
+        store.commit('initNewParty');
+      },
+      mounted(){
+        //获取当前部门下的所有考核workData
+        let loading = this.$loading({text:"加载中..."});
+        this.$http.post('/webapi/getAllParties',qs.stringify({'session_id':this.$store.state.user.sessionID,'department':this.$store.state.user.department})).then((d)=>{
+          if(d !== undefined && d.data.msg == 'success'){
+            if(d.data.value){
+            this.workData = JSON.parse(d.data.value);
+            this.currentData = this.baseFun.pagination(this.currentPage,this.pageSize,this.workData);
+            //let test = this.baseFun.pagination(this.currentPage,this.pageSize,this.workData);
+            //console.log(test);
+            }
+            loading.close();
+          }else{
+            this.$message({
+              message: d.data.msg,
+              type: 'warning',
+              duration: 1500
+            });
+            loading.close();
+          }
+        }).catch((err)=>{
+          this.$message({
+            message: err,
+            type: 'warning',
+            duration: 1500
+          });
+          loading.close();
+        })
       }
     }
 </script>
