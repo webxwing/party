@@ -126,11 +126,11 @@ footer .foot-content {
 .main {
   width: 100%;
   height: auto;
-  padding-top: 20px;
+  padding-top: 5px;
 }
 .topContent{
   text-align: center;
-  height: 45px;
+  min-height: 25px;
   margin: 8px auto;
 }
 .bodyContent {
@@ -145,8 +145,8 @@ footer .foot-content {
 .menu{
   width: 100%;
   display: inline-block;
-  height: 48px;
-  line-height: 48px;
+  /*height: 40px;*/
+  /*line-height: 40px;*/
 }
 .menu .info{
   float: left;

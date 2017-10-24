@@ -34,7 +34,7 @@ export default new Router({
     { path: '/admin/new2', name:'new2', component: New2 },
     { path: '/admin/new3', name:'new3', component: New3 },
     { path: '/admin/new4', name:'new4', component: New4 },
-    { path: '/admin/detail', name:'detail', component: Detail },
+    { path: '/admin/detail/:subject_id', name:'detail', component: Detail },
     { path: '/admin/resource/:subject_id', name:'resource', component: Resource },
     { path: '/admin/process', name:'process', component: Process },
     { path: '/admin/processnew', name:'processnew', component: ProcessNew },

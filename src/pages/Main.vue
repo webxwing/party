@@ -11,10 +11,11 @@
     </div>
     <div class="main-table">
       <el-table :data="currentData" border>
-        <el-table-column prop="YEAR" label="年度" width="100">
-
-        </el-table-column>
-        <el-table-column prop="NAME" label="标题" width="400">
+        <el-table-column prop="YEAR" label="年度" width="100"></el-table-column>
+        <el-table-column label="标题" width="400">
+          <template scope="scope">
+            <a style="cursor:pointer" title="查看考核详情"  @click="baseFun.gotoLink({ path: '/admin/detail/'+scope.row.SUBJECT_ID})">{{ scope.row.NAME}}</a>
+          </template>
         </el-table-column>
         <el-table-column prop="STATUS" label="状态" width="100"></el-table-column>
 

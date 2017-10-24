@@ -37,6 +37,9 @@
         :visible.sync="dialogVisible"
         size="small">
         <el-form :model="form">
+          <el-form-item v-if="selectNodeData" label="名称:" label-width="50px">
+            {{ selectNodeData.name.length <= 20 ? selectNodeData.name :  selectNodeData.name.slice(0,20) + '...'  }}
+          </el-form-item>
           <el-form-item label="分值:" label-width="50px">
             <el-input-number v-model="form.score" :step="2" :min="0" :max="100"></el-input-number>
           </el-form-item>

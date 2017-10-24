@@ -1,238 +1,464 @@
 <template>
   <div class="main">
-    <div class="detailContent">
-      <div class="bodyContent">
-        <div class="menu">
-          <div class="info">
-
-          </div>
-          <div class="button-group">
-            <el-button-group>
-              <el-tooltip class="item" effect="light" content="回到考核活动主页面" placement="top">
-                <el-button type="success"  size="small" >返 回</el-button>
-              </el-tooltip>
-            </el-button-group>
+    <div class="topContent">
+      <h2>工作过程考核详情</h2>
+    </div>
+    <div class="bodyContent">
+      <div class="menu">
+        <div class="info">
+          <div class="info-content">
+            <el-tag type="success">所选考核：{{ selectWorkItem.name.length >= 40 ? selectWorkItem.name.slice(0,40) + '...' : selectWorkItem.name  }}</el-tag>
           </div>
         </div>
-        <el-tree :data="data"
-                 node-key = "id"
-                 :props="defaultProps"
-                 @node-click="handleNodeClick"
-                 :default-expanded-keys = "defaultChecked"
-                 :render-content="renderContent"
-                 ref="trees">
-        </el-tree>
+        <el-popover ref="popover4"
+                    placement="left"
+                    width="420"
+                    trigger="click">
+          <el-tree :data="data"
+                   :loading ="loading"
+                   node-key = "id"
+                   @node-click="workNodeClick"
+                   :props="defaultProps"
+                   ref="trees">
+          </el-tree>
+        </el-popover>
+        <div class="button-group">
+          <el-button-group>
+            <el-tooltip class="item" effect="light" content="所有条目查看、选择" placement="top">
+              <el-button type="primary"  size="small" v-popover:popover4>考核总览</el-button>
+            </el-tooltip>
+            <el-tooltip class="item" effect="light" content="回到主页" placement="top">
+              <el-button type="primary"  size="small" @click="baseFun.gotoLink( { name:'main'})">返 回</el-button>
+            </el-tooltip>
+          </el-button-group>
+        </div>
       </div>
-      <el-dialog
-        title="设置"
-        :visible.sync="dialogVisible"
-        size="small">
-        <el-form :model="form">
-          <el-form-item label="分值:" label-width="50px">
-            <el-input-number v-model="form.score" :step="2" :min="0" :max="100"></el-input-number>
-          </el-form-item>
-          <el-form-item label="要求:" label-width="50px">
-            <el-input type="textarea" :rows="3" placeholder="考核要求及评分细则"></el-input>
-          </el-form-item>
-        </el-form>
-        <div class="dialog-footer">
-          <el-button @click="dialogVisible = false">取 消</el-button>
-          <el-button type="primary" @click="dialogVisible = false">确 定</el-button>
+      <div class="menu">
+        <div class="departments">
+          <div class="info-content">
+            <span>有资料部门：</span><el-select v-model="fileDepartmentsSelect" placeholder="有资料上传部门" @change="fileDepartChange">
+            <el-option v-for="department in fileDepartments" :key="department.department" :label="department.department" :value="department.department">
+
+            </el-option>
+          </el-select><span> - </span>
+            <span>无资料部门：</span><el-select v-model="noFileDepartmentsSelect" placeholder="无资料上传部门">
+            <el-option v-for="department in noFileDepartments" :key="department.department" :label="department.department" :value="department.department">
+            </el-option>
+          </el-select>
+          </div>
         </div>
-      </el-dialog>
+      </div>
+      <div class="rightContent">
+        <h3>资源详情</h3>
+        <div class="ContentDetail" v-if="selectResExp">
+          <el-row>
+            <el-tag type="success">超时属性：{{ selectResExp.timeoutEx }}</el-tag>
+            <span></span>
+            <el-tag type="success">目录属性：{{ selectResExp.allowEx }}</el-tag>
+          </el-row>
+          <el-row>
+            <el-tag type="success">允许上传时间：{{ selectResExp.dateRange}}</el-tag>
+          </el-row>
+        </div>
+        <div class="ContentDetail">
+          <el-collapse v-model="fileListName">
+
+            <el-collapse-item title="文件列表" name="1">
+              <ul>
+                <li v-for="fileItem in filesList">
+                  <a :title='showFileCreator(fileItem.CREATOR)' >
+                    <i class="el-icon-document"></i>
+                    <span :class=" {'colorRed' : fileItem.EXPIRE == 'yes'}" >{{ fileItem.FILENAME }} &nbsp;<el-tag type="primary" v-if="fileItem.DEPARTMENT == 'share'">s</el-tag></span>
+                  </a>
+                </li>
+              </ul>
+              <div v-if="filesList.length <= 0">
+                没有任何文件
+              </div>
+            </el-collapse-item>
+            </el-collapse-item>
+          </el-collapse>
+        </div>
+      </div>
+      <div class="leftContent">
+        <div class="rightUpContent">
+
+        </div>
+        <div class="rightDownContent">
+          <div class="top">
+            <h3>资源目录</h3>
+          </div>
+          <div class="btnPanel">
+            <div class="btnLeft">
+              <span>所选资源：{{  showResName  }}</span>
+            </div>
+            <div class="btnRight">
+
+            </div>
+          </div>
+          <div class="resource">
+            <el-tree :data="rData"
+                     :default-expand-all = "true"
+                     :v-loading = "resLoading"
+                     class="tree-style"
+                     @node-click="resNodeClick"
+                     highlight-current
+                     node-key = "id"
+                     :props="defaultProps"
+                     ref="resource">
+            </el-tree>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
 <script>
-  //节点新增的id标识
-  let guid = 2;
+  import leftSteps from '../components/LeftSteps.vue'
+  import store from '../common/store.js'
+  import qs from 'qs'
   export default {
     name: 'detail',
     data() {
       return {
-        data: [{
-          id: 1,
-          label:'2017年基层党建目标考核2017年基层党建目标考核2017年基层党建目标考核',
-          children:[{
-            id: 10,
-            label: '1、基本目标',
-            children: [{
-              id: 101,
-              label: '1-1 整体工作氛围良好（6分）2017年基层党建目标考核2017年基层党建目标考核2017年基层党建目标考核2017年基层党建目标考核2017年基层党建目标考核',
-              children: [{
-                id: 1011,
-                label:'1-1-1 党政主要负责同志能深入群众，善于解决实际问题，在群众中有威信，党群关系良好（3分）',
-                children:[]
-              },{
-                id: 1012,
-                label: '1-1-2 所在部门遵章守纪，团结和谐，积极向上（3分）',
-                children: []
-              }]
-            },{
-              id: 11,
-              label: '1-2 党政领导履职尽现（6分）',
-              children: [{
-                id: 1111,
-                label: '1-2-1 认真履行党建工作责任，部门党政领导、支委成员分工明确、责任落实（2分）',
-                children:[]
-              },{
-                id: 1112,
-                label: '1-2-2 有较稳定的专兼职人员负责开展党建工作（2分）',
-                children:[]
-              },{
-                id: 1113,
-                label: '1-2-3 党建工作年度计划明确，重点突出，措施具体（2分）',
-                children:[]
-              }]
-            }]
-          },{
-            id: 2,
-            label: '2、重点目标（6分）',
-            children: [{
-              id: 101,
-              label: '1-1 整体工作氛围良好（6分）',
-              children: [{
-                id: 1011,
-                label:'1-1-1 党政主要负责同志能深入群众，善于解决实际问题，在群众中有威信，党群关系良好（3分）',
-                children:[]
-              },{
-                id: 1012,
-                label: '1-1-2 所在部门遵章守纪，团结和谐，积极向上（3分）',
-                children: []
-              }]
-            }]
-          },{
-            id: 3,
-            label: '3、其它目标（6分）',
-            children:[{
-              id: 101,
-              label: '1-1 整体工作氛围良好（6分）',
-              children: [{
-                id: 1011,
-                label:'1-1-1 党政主要负责同志能深入群众，善于解决实际问题，在群众中有威信，党群关系良好（3分）',
-                children:[]
-              },{
-                id: 1012,
-                label: '1-1-2 所在部门遵章守纪，团结和谐，积极向上（3分）',
-                children: []
-              }]
-            }]
-          },{
-            id: 40,
-            label: '4、明年目标',
-            children: [{
-              id: 401,
-              label: '1-1 整体工作氛围良好（6分）',
-              children: [{
-                id: 4011,
-                label:'1-1-1 党政主要负责同志能深入群众，善于解决实际问题，在群众中有威信，党群关系良好（3分）',
-                children:[]
-              },{
-                id: 4012,
-                label: '1-1-2 所在部门遵章守纪，团结和谐，积极向上（3分）',
-                children: []
-              }]
-            },{
-              id: 41,
-              label: '1-2 党政领导履职尽现（6分）',
-              children: [{
-                id: 4111,
-                label: '1-2-1 认真履行党建工作责任，部门党政领导、支委成员分工明确、责任落实（2分）',
-                children:[]
-              },{
-                id: 4112,
-                label: '1-2-2 有较稳定的专兼职人员负责开展党建工作（2分）',
-                children:[]
-              },{
-                id: 4113,
-                label: '1-2-3 党建工作年度计划明确，重点突出，措施具体（2分）',
-                children:[]
-              }]
-            }]
-          }]
-        }],
+        data: [],
+        user:null,
         defaultProps: {
           children: 'children',
-          label: 'label',
+          label: 'name'
         },
-        //默认展开
-        defaultChecked:[1],
-        //所选节点
-        selectNodeData: [],
-        dialogVisible: false ,
-        //设置表单域
-        form:{
-          id:23,
-          label: '',
-          score: 0,
-          content: ''
-        }
-      };
+        //资源目录树
+        rData:[],
+        //所选考核条目
+        selectWorkItem:{
+          children : [],
+          id : null,
+          memo : '--',
+          value : '--',
+          name : '--'
+        },
+        //所选资源条目
+        selectResItem:null,
+        selectResExp:null,
+        //目录树等待动画
+        loading: true,
+        //资源树等待动画
+        resLoading: true,
+        fileListName: '1',
+        //上传部门和未上传部门
+        noFileDepartments : [],
+        fileDepartments : [],
+        noFileDepartmentsSelect : '',
+        fileDepartmentsSelect : '',
+        //文件列表
+        filesList:[]
+      }
     },
-    components: {  },
+    store,
     methods: {
-      //节点点击事件
-      handleNodeClick(data,node,self){
-        //var isChecked = node.checked;
-        this.$refs.trees.setCheckedKeys([]);
-        //node.checked = ! isChecked;
-        //console.log(data.id);
-
-
-
-        //console.log(node);
-        node.checked = true;
-        //console.log(self);
-        //this.$refs.trees.store.remove(data);
-        this.selectNodeData = data;
-        if( data.children == undefined || data.children.length <= 0){
-          //显示设置对话框
-          this.dialogVisible = true;
-        }
-
-      },
-      //是否有节点被选中
-      isCheck(node){
-        if(node == undefined||node.length<=0){
-          this.$message({
-            showClose: true,
-            type: 'error',
-            message: '请选择父级条目！',
-            duration: 1500
-          });
-          return false
-        }else{
-          return true;
-        }
-      },
-      showTitle(node){
-        return node.children.length <= 0 ? true : false;
-      },
       renderContent(h,{ node ,data,store }){
         return (
           <span>
              { node.label }
            </span >
-        );
+        )
+      },
+      //节点点击事件
+      workNodeClick(data,node,self){
+        this.$refs.trees.setCheckedKeys([]);
+        node.checked = true;
+        this.selectWorkItem = data;
+        //console.log(data);
+        //当前条目资源分类初始化
+        /*
+        let rPostUrl = '/webapi/getItemRes'
+        let rParams = {
+          session_id : this.user.sessionID ? this.user.sessionID : '',
+          subject_id :this.$route.params.subject_id ? this.$route.params.subject_id : '',
+          item_id :  this.selectWorkItem.id
+        }
+        this.$http.post(rPostUrl, qs.stringify(rParams)).then((d)=>{
+          if( d !=undefined && d.data.msg == 'success'){
+            if(d.data.value){
+              this.rData = Array.from(d.data.value);
+              this.rData = new Array(d.data.value);
+            }else{
+              this.rData = [];
+              this.selectResItem = {};
+            }
+          }else{
+            this.$message({ message: d.data.msg,type:'warning' ,duration:1500 });
+          }
+        }).catch((err)=>{
+          this.$message({ message:'服务器'+err,type:'error',duration:1500 });
+        });
+        this.resLoading = false;
+        */
+        //获取资料上传和未上传部门
+        let fileDepartUrl = "/webapi/get_Item_All_HasFiles_Department_Admin";
+        let noFileDepartUrl = "/webapi/get_Item_All_HasNoFiles_Department_Admin";
+        let departParmas = {
+          session_id :this.user.sessionID ? this.user.sessionID : '',
+          item_id : data.id
+        }
+        this.$http.post(fileDepartUrl,qs.stringify(departParmas)).then((d)=>{
+          if( d!= undefined && d.data.msg == 'success' && d.data.value){
+            //console.log(d.data.value)
+            this.fileDepartments = JSON.parse(d.data.value);
+          }else{
+            this.fileDepartments = [];
+          }
+        });
+        this.$http.post(noFileDepartUrl,qs.stringify(departParmas)).then((d)=>{
+          if( d!= undefined && d.data.msg == 'success' && d.data.value){
+            //console.log(d.data.value)
+            this.noFileDepartments = JSON.parse(d.data.value);
+          }else{
+            this.noFileDepartments = [];
+          }
+        })
+      },
+      resNodeClick(data,node,self){
+        this.$refs.resource.setCheckedKeys([]);
+        node.checked = true;
+        this.selectResItem = data;
+        this.selectResExp = null;
+        //console.log(this.selectResItem); item_id
+        //获取资源属性并显示
+        let getItemPostUrl = '/webapi/getItemResExpireDate';
+        let getItemParams = {
+          session_id : this.user.sessionID ? this.user.sessionID : '',
+          department : this.user.department ? this.user.department : '',
+          item_directory_id : this.selectResItem.id
+        };
+        this.$http.post(getItemPostUrl,qs.stringify(getItemParams)).then((d)=>{
+          if( d !=undefined && d.data.msg == 'success') {
+            //初始化
+            var item = JSON.parse(d.data.value);
+            var startTime = new Date(item[0].STARTTIME);
+            var endTime = new Date(item[0].ENDTIME);
+            this.selectResExp = [];
+            this.selectResExp.dateRange = startTime.getFullYear()+"/"+(startTime.getMonth()+1) +"/" + startTime.getDate() + " - " + endTime.getFullYear()+"/"+(endTime.getMonth()+1) +"/" + endTime.getDate();
+            this.selectResExp.timeoutEx = this.expireFilter(item[0].EXPIRE_OPER);
+            this.selectResExp.allowEx = this.allowFileter(item[0].ALLOWDIR);
+          }else{
+            this.$message({ message: d.data.msg,type:'warning' ,duration:1500 });
+          }
+        }).catch((err)=>{
+          this.$message({ message:'服务器'+err,type:'error',duration:1500 });
+        });
+        //获取文件列表
+        let getFilesUrl = "/webapi/getFilesList_Department_Admin";
+        let getFilesParams = {
+          session_id :this.user.sessionID ? this.user.sessionID : '',
+          item_directory_id : this.selectResItem.id,
+          department : this.fileDepartmentsSelect
+        }
+        this.$http.post(getFilesUrl,qs.stringify(getFilesParams)).then((d)=>{
+          if( d !=undefined && d.data.msg == 'success' && d.data.value) {
+            //显示文件列表
+            var files = JSON.parse(d.data.value);
+            console.log(files);
+            this.filesList = files;
+          }else{
+            this.filesList = [];
+
+          }
+        }).catch((err)=>{
+          this.$message({ message:'服务器'+err,type:'error',duration:1500 });
+        });
+
+      },
+      //是否有节点被选中
+      isCheck(node){
+        if(node == undefined||node.length<=0){
+          this.$message({message:'请选择操作目录！',type:'warning',duration:1500});
+          return false
+        }else{
+          return true;
+        }
+      },
+      expireFilter(value){
+        switch(value){
+          case "no": return '禁止上传';break;
+          case "yes": return '允许上传';break;
+          case "assess": return '允许上传(要考核)';break;
+        }
+      },
+      allowFileter(value){
+        switch(value){
+          case ",yes,": return '创建、上传';break;
+          case ",yes,nofile,": return '创建、禁止上传';break;
+          case ",no,": return '禁止创建、禁止上传';break;
+        }
+      },
+      //选择有资料部门
+      fileDepartChange(value){
+        let rPostUrl = '/webapi/getItemRes_Department';
+        let rParams = {
+          session_id : this.user.sessionID ? this.user.sessionID : '',
+          subject_id :this.$route.params.subject_id ? this.$route.params.subject_id : '',
+          department : value,
+          item_id :  this.selectWorkItem.id
+        }
+        this.$http.post(rPostUrl, qs.stringify(rParams)).then((d)=>{
+          if( d !=undefined && d.data.msg == 'success'){
+            if(d.data.value){
+              //console.log(d.data.value);
+              this.rData = new Array(d.data.value);
+
+            }else{
+              this.rData = [];
+              this.selectResItem = {};
+            }
+          }else{
+            this.$message({ message: d.data.msg,type:'warning' ,duration:1500 });
+          }
+        }).catch((err)=>{
+          this.$message({ message:'服务器'+err,type:'error',duration:1500 });
+        });
+        this.resLoading = false;
+      },
+      showFileCreator(creator){
+        return '上传者：'+creator;
       }
+
+    },
+    created(){
+      //登录验证
+      this.baseFun.isLoginGoTo();
+      //防止刷新数据丢失
+      store.commit('initialUser');
+      //更新数据
+      this.user = store.state.user;
+      //获取体系树目录
+      let postUrl = '/webapi/getAllPartyItems';
+      let params = {
+        session_id : this.user.sessionID ? this.user.sessionID : '',
+        subject_id : this.$route.params.subject_id ? this.$route.params.subject_id : ''
+      }
+      this.$http.post(postUrl, qs.stringify(params)).then((d)=>{
+        if( d !=undefined && d.data.msg == 'success'){
+          this.data = new Array(d.data.value);
+        }else{
+          this.$message({ message: d.data.msg,type:'warning' ,duration:1500 });
+        }
+      }).catch((err)=>{
+        this.$message({ message:'服务器'+err,type:'error',duration:1500 });
+      });
+      this.loading = false;
+    },
+    computed: {
+      showResName: function(){
+        if(this.selectResItem  && this.selectResItem.name){
+
+          if(this.selectResItem.name.length >18 ){
+            return this.selectResItem.name.slice(0,18) + '...';
+          }else{
+            return this.selectResItem.name;
+          }
+        }else{
+          return "空";
+        }
+      }
+
     }
   }
 </script>
 <style scoped>
-  .el-tree {
-    border: none;
-    width: 900px;
-    border-top: 1px solid #676a6c;
-    border-bottom: 1px solid #676a6c;
+  /*重写*/
+  .topContent{
+    margin: 3px auto !important;
+  }
+
+  .leftContent {
+    position: relative;
+    width: 445px;
+    height: 100%;
+    float: left;
+    margin-left: 30px;
+  }
+
+  .rightContent {
+    position: relative;
+    width: 445px;
+    height: auto;
+    float: right;
     margin-right: 30px;
-    margin-bottom: 5px;
   }
-  .dialog-footer{
+  .rightUpContent,.rightDownContent {
+    position: relative;
+    width: 100%;
+    height: auto;
+    margin: 0;
+  }
+  .rightDownContent {
+    /*margin-top: 10px;*/
+    margin-bottom: 10px;
+  }
+
+  h3 {
+    padding-left: 10px;
+    width: 435px;
+    height: 28px;
+    line-height: 28px;
+    color: #EFEFEF;
+    background: #58B7FF;
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+    -moz-border-radius-topright: 5px;
+    -moz-border-radius-topleft: 5px;
+    -webkit-border-top-left-radius: 5px;
+    -webkit-border-top-right-radius: 5px;
+  }
+  .el-tree {
+    min-height: 38px;
+    width: 100%;
+  }
+  .resource .el-tree{
+    min-height: 38px;
+    width: 443px;
+    border: 1px solid #58B7FF;
+    border-top: 1px solid rgb(193,193,193) !important;
+  }
+  .btnPanel {
+    position: relative;
+    width: 433px;
+    height: 28px;
+    padding: 5px;
+    border-left: 1px solid #58B7FF;
+    border-right: 1px solid #58B7FF;
+  }
+  .btnPanel .btnLeft {
+    float: left;
+    line-height: 28px;
+    width: 100%;
+  }
+  .btnPanel .btnLeft span {
+    margin-top: 5px;
+  }
+  .btnPanel .btnRight {
     text-align: right;
+    float: right;
+    width: 35%;
   }
-  .detailContent{
-    width: 930px;
-    padding: 0 30px;
+  .resTree{
+    margin-bottom: 10px;
+  }
+  .ContentDetail{
+    width: 443px;
+    border: 1px solid #58B7FF;
+    border-top: none;
+  }
+  .info-content{
+    margin-left:30px;
+  }
+  .menu .departments{
+    margin-bottom: 8px;
+    display:block;
+  }
+  .colorRed{
+    color:red;
   }
 </style>
 

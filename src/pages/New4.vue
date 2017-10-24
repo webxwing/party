@@ -157,9 +157,9 @@
             })
           }
         })
-        console.log(this.departList);
-        console.log(this.chooseList);
-        console.log(this.allDepartments);
+        //console.log(this.departList);
+        //console.log(this.chooseList);
+        //console.log(this.allDepartments);
         this.departLoading = false;
         this.dialogVisible = true;
       },
@@ -218,6 +218,7 @@
         }
 
       },
+      dialogClose(){}
     },
     created(){
       //登录验证

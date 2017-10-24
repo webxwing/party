@@ -43,11 +43,14 @@ const pagination = function(pageNo,pageSize,array){
     array.slice( offset,array.length) :
     array.slice( offset,offset + pageSize);
 }
+//服务器URL地址
+const baseURL = 'http://localhost:53975';
 
 export default {
   gotoLink,
   isLogin,
   isLoginGoTo,
   logout,
-  pagination
+  pagination,
+  baseURL
 };
