@@ -33,7 +33,7 @@ const isLogin = function(){
 //注销
 const logout = function(){
   window.sessionStorage.clear();
-  router.push({ name:'login'});
+  router.push({ path:'/'});
 }
 
 //数组的分页

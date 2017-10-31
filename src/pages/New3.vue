@@ -12,6 +12,9 @@
         </div>
         <div class="button-group">
           <el-button-group>
+            <el-tooltip class="item" effect="light" content="回到主页" placement="top">
+              <el-button type="primary"  size="small" @click="baseFun.gotoLink({ path:'/admin/main' })">退出</el-button>
+            </el-tooltip>
             <el-tooltip class="item" effect="light" content="回到考核体系设置" placement="top">
               <el-button type="primary"  size="small" @click="baseFun.gotoLink('new2')">上一步</el-button>
             </el-tooltip>
@@ -103,7 +106,7 @@
         //console.log(self);
         //this.$refs.trees.store.remove(data);
         this.selectNodeData = data;
-        if( data.children == undefined || data.children.length <= 0){
+        if( data.children == null || data.children.length <= 0){
           //初始化表单
           this.form.score = data.value;
           this.form.content = data.memo;
@@ -211,7 +214,7 @@
       }
       this.$http.post(postUrl, qs.stringify(params)).then((d)=>{
         if( d !=undefined && d.data.msg == 'success'){
-          this.data = Array.from(d.data.value);
+          //this.data = Array.from(d.data.value);
           this.data = new Array(d.data.value);
           this.loading = false;
         }else{

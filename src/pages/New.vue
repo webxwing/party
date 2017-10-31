@@ -16,7 +16,7 @@
         <div class="button-group">
           <el-button-group>
             <el-tooltip class="item" effect="light" content="回到主页" placement="top">
-              <el-button type="success"  size="small" @click="baseFun.gotoLink({ path:'/admin/main' })">返 回</el-button>
+              <el-button type="success"  size="small" @click="baseFun.gotoLink({ path:'/admin/main' })">退出</el-button>
             </el-tooltip>
             <el-tooltip class="item" effect="light" content="保存并进入考核体系设置" placement="top">
               <el-button type="primary"  size="small" @click="onSubmit('form')" >下一步</el-button>
@@ -106,6 +106,8 @@
             if (valid) {
               let loading = this.$loading({text:"保存中..."});
               //判断是否有可修改的参数
+              var stringStartTime = new Date( this.form.startTime);
+              var stringEndTime = new Date(this.form.endTime);
               if(this.$route.params.row){
                 //修改
                 let posteditUrl = '/webapi/updateParty';
@@ -115,8 +117,8 @@
                   department : this.$route.params.row.DEPARTMENT,
                   name : this.form.name,
                   year : this.form.year,
-                  startTime : this.form.startTime,
-                  endTime : this .form.endTime,
+                  startTime : stringStartTime.getFullYear()+'-'+(stringStartTime.getMonth()+1)+'-'+stringStartTime.getDate(),
+                  endTime : stringEndTime.getFullYear()+'-'+(stringEndTime.getMonth()+1)+'-'+stringEndTime.getDate(),
                   memo : this.$route.params.row.MEMO,
                   status: this.form.status,
                 };
@@ -145,8 +147,8 @@
                   department : this.user.department,
                   name : this.form.name,
                   year : this.form.year,
-                  startTime : this.form.startTime,
-                  endTime : this .form.endTime,
+                  startTime : stringStartTime.getFullYear()+'-'+(stringStartTime.getMonth()+1)+'-'+stringStartTime.getDate(),
+                  endTime : stringEndTime.getFullYear()+'-'+(stringEndTime.getMonth()+1)+'-'+stringEndTime.getDate(),
                   memo : ''
                 };
                 this.$http.post(postaddUrl,qs.stringify(prams)).then((d) => {

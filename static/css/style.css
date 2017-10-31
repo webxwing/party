@@ -120,6 +120,13 @@ footer .foot-content {
 }
 .el-tree {
   overflow: auto;
+  min-height: 40px;
+}
+.el-dialog__body{
+  padding: 12px 18px !important;
+}
+.el-row {
+  margin: 5px;
 }
 /*页面样式*/
 
@@ -156,7 +163,7 @@ footer .foot-content {
 .menu .button-group{
   float: right;
   text-align: right;
-  width: 45%;
+  width: auto;
   margin-right: 30px;
 }
 

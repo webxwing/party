@@ -3,7 +3,6 @@
   <div class="img-login">
     <img src="../assets/cdivtc.png" alt="成都工业职业技术学院">
   </div>
-  <h2 class="title">管理员登录</h2>
   <el-form ref="form" label-position="right" label-width="180px" :rules="rules" :model="form">
     <el-form-item label="用户名:" prop="username">
       <el-input v-model="form.username"
@@ -11,20 +10,26 @@
         icon="close">
       </el-input>
     </el-form-item>
-    <el-form-item label="密码：" prop="password">
+    <el-form-item label="密 码：" prop="password">
       <el-input v-model="form.password"
         placeholder="请输入你的密码"
         type="password"
         icon="close">
       </el-input>
     </el-form-item>
-    <el-form-item label="部门：" prop="selectDepart">
+    <el-form-item label="部 门：" prop="selectDepart">
       <el-select v-model="form.selectDepart" placeholder="请选择">
         <el-option v-for="depart in departments"
         :key="depart.department"
         :label="depart.department"
         :value="depart.department">
         </el-option>
+      </el-select>
+    </el-form-item>
+    <el-form-item label="角 色：">
+      <el-select v-model="form.selectActor" placeholder="请选择用户的类型">
+        <el-option key="admin" value="管理员">管理员</el-option>
+        <el-option key="user" value="普通用户">普通用户</el-option>
       </el-select>
     </el-form-item>
     <el-form-item>
@@ -41,7 +46,7 @@
   export default {
     data () {
       return {
-        form: { username:'',password:'',selectDepart:'' },
+        form: { username:'',password:'',selectDepart:'',selectActor:'普通用户' },
         departments:[],
         rules: {
           username: [
@@ -70,7 +75,6 @@
     },
     methods: {
       login(formName){
-
         this.$refs[formName].validate((valid) => {
           if (valid) {
             let loading = this.$loading({text:"加载中..."});
@@ -90,7 +94,13 @@
                 this.$store.state.user.sessionID = d.data.value;
                 this.$store.state.user.name = this.form.username;
                 this.$store.state.user.department =  this.form.selectDepart;
-                this.baseFun.gotoLink({path:'/admin/main'});
+                if(this.form.selectActor == '管理员'){
+                  this.baseFun.gotoLink({ path:'/admin/main' });
+                }else if(this.form.selectActor == '普通用户'){
+                  this.baseFun.gotoLink({ path:'/user/main' });
+                }else{
+                  this.$message({message:'没有选择任何角色!',type:'error',duration:1500});
+                }
               } else {
                 loading.close();
                 this.$message({
@@ -114,7 +124,7 @@
       let departUrl = '/webapi/get_LoginDepartment';
       this.$http.post(departUrl).then((d)=>{
         if(d!=undefined && d.data.msg == 'success'){
-          console.log(d.data.value);
+          //console.log(d.data.value);
           this.departments = JSON.parse(d.data.value) ;
         }
       })
@@ -138,11 +148,5 @@
 }
 .el-input,.el-select {
   width: 280px;
-}
-h2.title{
-  width: 100%;
-  margin: 0 auto 10px auto;
-  text-align: center;
-  font-size: 14px;
 }
 </style>

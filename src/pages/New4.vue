@@ -92,33 +92,36 @@
     methods: {
       //节点点击事件
       handleNodeClick(data,node,self){
+        /*根节点判断
         if( data.children == undefined || data.children.length <= 0){
-          this.$refs.trees.setCheckedKeys([]);
-          node.checked = true;
-          this.selectNodeData = data;
-          //获取已设置部门存于chooseList
-          let getItemRelevantDepartmentUrl = '/webapi/getItemRelevantDepartment';
-          let getItemRelevantDepartmentParams = {
-            session_id : this.user.sessionID ? this.user.sessionID : '',
-            subject_id : this.newParty.subjectID ? this.newParty.subjectID : '',
-            department : this.user.department ? this.user.department : '',
-            item_id : data.id
-          };
-          this.$http.post(getItemRelevantDepartmentUrl,qs.stringify(getItemRelevantDepartmentParams)).then((d)=>{
-            if(d.data.msg == "success"){
-              let tempDep = d.data.value ? JSON.parse(d.data.value) : [];
-              this.chooseList = [];
-              for(var i=0;i<tempDep.length;i++){
-                let item = tempDep[i];
-                this.chooseList.push(item.DEPARTMENT);
-              }
-            }else{
-              this.$message({message:'已选部门获取失败',type:'warning',duration:1500});
-            }
-          }).catch((err)=>{
-            this.chooseList = [];
-          });
+
         }else{this.selectNodeData = null;this.chooseList = []}
+        */
+        this.$refs.trees.setCheckedKeys([]);
+        node.checked = true;
+        this.selectNodeData = data;
+        //获取已设置部门存于chooseList
+        let getItemRelevantDepartmentUrl = '/webapi/getItemRelevantDepartment';
+        let getItemRelevantDepartmentParams = {
+          session_id : this.user.sessionID ? this.user.sessionID : '',
+          subject_id : this.newParty.subjectID ? this.newParty.subjectID : '',
+          department : this.user.department ? this.user.department : '',
+          item_id : data.id
+        };
+        this.$http.post(getItemRelevantDepartmentUrl,qs.stringify(getItemRelevantDepartmentParams)).then((d)=>{
+          if(d.data.msg == "success"){
+            let tempDep = d.data.value ? JSON.parse(d.data.value) : [];
+            this.chooseList = [];
+            for(var i=0;i<tempDep.length;i++){
+              let item = tempDep[i];
+              this.chooseList.push(item.DEPARTMENT);
+            }
+          }else{
+            this.$message({message:'已选部门获取失败',type:'warning',duration:1500});
+          }
+        }).catch((err)=>{
+          this.chooseList = [];
+        });
       },
       //是否有节点被选中
       isCheck(node){

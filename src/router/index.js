@@ -41,9 +41,9 @@ export default new Router({
     { path: '/admin/choosework', name:'choosework', component: ChooseWork },
     { path: '/admin/processgrade', name:'processgrade', component: ProcessGrade }
     ,
-    { path:'/user/login',name:'userlogin',component:UserLogin},
+    { path:'/user/login',name:'userlogin',component:Login},
     { path:'/user/main',name:'usermain',component:UserMain },
-    { path:'/user/process',name:'userprocess',component:UserProcess }
+    { path:'/user/process/:subject_id',name:'userprocess',component:UserProcess }
     ,
     { path:'/user/upload',name:'userupload',component:Upload }
   ]

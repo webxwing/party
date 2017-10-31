@@ -18,31 +18,56 @@
           icon="close">
         </el-input>
       </el-form-item>
+      <el-form-item label="部门：" prop="selectDepart">
+        <el-select v-model="form.selectDepart" placeholder="请选择">
+          <el-option v-for="depart in departments"
+                     :key="depart.department"
+                     :label="depart.department"
+                     :value="depart.department">
+          </el-option>
+        </el-select>
+      </el-form-item>
       <el-form-item>
-        <el-button type="primary" icon="search">登录</el-button>
-        <el-button type="text">找回密码</el-button>
+        <el-button type="primary" icon="search" @click="login('form')">登录</el-button>
+        <el-button type="text"  @click="$message({message:'功能还在完善中'})">找回密码</el-button>
       </el-form-item>
     </el-form>
   </div>
 </template>
 <script>
-  import router from '../router'
-  import config from '../common/config'
-
+  import store from '../common/store.js'
+  import baseFun from '../common/baseFun.js'
+  import qs from 'qs'
   export default {
     name:'userLogin',
     data () {
       return {
-        form: { username:'',password:'' },
+        form: { username:'',password:'',selectDepart:'' },
+        departments:[],
         rules: {
           username: [
             { required:true,message:'用户名不能为空',trigger:'blur' }
           ],
           password:[
             { required:true,message:'密码不能为空',trigger:'blur' }
+          ],
+          selectDepart:[
+            { required:true,message:'请选择部门',trigger:'change' }
           ]
         }
       }
+    },
+    store,
+    beforeCreate(){
+      store.commit('initialUser');
+//      if(this.baseFun.isLogin()){
+//        let loginLoading = this.$loading({text:"登录中..."});
+//        setTimeout(function(){
+//          loginLoading.close();
+//          baseFun.gotoLink({ path:'/admin/main' });
+//        },1800);
+//      }
+
     },
     methods: {
       login(){

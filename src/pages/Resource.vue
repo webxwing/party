@@ -61,6 +61,16 @@
           <div class="btnPanel">
             <div class="btnLeft">
               <span>所选：{{ showResName  }}</span>
+              <div v-if="selectResExp">
+                <el-row>
+                  <el-tag type="success">超时属性：{{ selectResExp.timeoutEx }}</el-tag>
+                  <span></span>
+                  <el-tag type="success">目录属性：{{ selectResExp.allowEx }}</el-tag>
+                </el-row>
+                <el-row>
+                  <el-tag type="success">允许上传时间：{{ selectResExp.dateRange}}</el-tag>
+                </el-row>
+              </div>
             </div>
             <div class="btnRight">
               <el-button-group>
@@ -166,7 +176,6 @@
               <el-button type="primary" @click="saveUpdateClass('resourceFrm')" v-else>保 存</el-button>
             </div>
           </el-dialog>
-
         </div>
       </div>
     </div>
@@ -199,6 +208,8 @@
           },
           //所选资源条目
           selectResItem:null,
+          //资源条目属性显示
+          selectResExp: false,
           //资源对话框控制
           dialogVisible: false,
           dialogUpload: false,
@@ -242,6 +253,16 @@
            </span >
           )
         },
+        //资源树节点渲染
+        renderResourceContent(h,{ node,data,store}){
+          console.log(data);
+          let txt = "this is a test";
+          return (
+            <a title={ txt }>
+              { node.label }
+            </a>
+          )
+        },
         //节点点击事件
         workNodeClick(data,node,self){
           this.$refs.trees.setCheckedKeys([]);
@@ -263,6 +284,7 @@
               }else{
                 this.rData = [];
                 this.selectResItem = {};
+                this.selectResExp = null;
               }
             }else{
               this.$message({ message: d.data.msg,type:'warning' ,duration:1500 });
@@ -277,7 +299,31 @@
           node.checked = true;
           this.selectResItem = data;
           //console.log(this.selectResItem);
+          //获取资源目录属性
+          //获取资源属性并显示
+          let getItemPostUrl = '/webapi/getItemResExpireDate';
+          let getItemParams = {
+            session_id : store.state.user.sessionID ? store.state.user.sessionID : '',
+            department : store.state.user.department ? store.state.user.department : '',
+            item_directory_id : data.id
+          };
 
+          this.$http.post(getItemPostUrl,qs.stringify(getItemParams)).then((d)=>{
+            if( d !=undefined && d.data.msg == 'success') {
+              //初始化
+              var item = JSON.parse(d.data.value);
+              var startTime = new Date(item[0].STARTTIME);
+              var endTime = new Date(item[0].ENDTIME);
+              this.selectResExp = [];
+              this.selectResExp.dateRange = startTime.getFullYear()+"/"+(startTime.getMonth()+1) +"/" + startTime.getDate() + " - " + endTime.getFullYear()+"/"+(endTime.getMonth()+1) +"/" + endTime.getDate();
+              this.selectResExp.timeoutEx = this.expireFilter(item[0].EXPIRE_OPER);
+              this.selectResExp.allowEx = this.allowFileter(item[0].ALLOWDIR);
+            }else{
+              this.$message({ message: d.data.msg,type:'warning' ,duration:1500 });
+            }
+          }).catch((err)=>{
+            this.$message({ message:'服务器'+err,type:'error',duration:1500 });
+          });
         },
         //是否有节点被选中
         isCheck(node){
@@ -404,8 +450,10 @@
                       if( da !=undefined && da.data.msg == 'success') {
                         //前端显示
                         this.selectResItem.name = this.resourceForm.name.trim();
-
-                        this.$message({ message: '修改成功!',type:'success' ,duration:1500 });
+                        this.selectResExp.timeoutEx = this.expireFilter(updateParams.expire_oper);
+                        this.selectResExp.allowEx = this.allowFileter(updateParams.allowdir);
+                        this.selectResExp.dateRange = updateParams.starttime + " - " + updateParams.endtime;
+                          this.$message({ message: '修改成功!',type:'success' ,duration:1500 });
                         this.resetResClass();
 
                       }else{
@@ -437,6 +485,8 @@
                   if( da !=undefined && da.data.msg == 'success') {
                     //前端显示
                     this.selectResItem.name = this.resourceForm.name.trim();
+                    this.selectResExp.timeoutEx = this.expireFilter(updateRootParams.expire_oper);
+                    this.selectResExp.allowEx = this.allowFileter(updateRootParams.allowdir);
 
                     this.$message({ message: '根目录修改成功!',type:'success' ,duration:1500 });
                     this.resetResClass();
@@ -519,7 +569,8 @@
               if(d!=undefined && d.data.msg == 'success'){
                 this.$refs.resource.store.remove(this.selectResItem);
                 this.selectResItem = [];
-                this.$message({ message:'删除成功！',type:'success',duration: 1500 });
+                this.selectResExp = null;
+                  this.$message({ message:'删除成功！',type:'success',duration: 1500 });
               }else{
                 this.$message({ message:d.data.msg,type:'warning',duration: 1500 });
               }
@@ -610,7 +661,23 @@
         },
         handleError(err,file,fileList){
           this.$message.error('上传失败，请检查网络是否正常:'+err);
+        },
+        //文件列表操作
+        expireFilter(value){
+          switch(value){
+            case "no": return '禁止上传';break;
+            case "yes": return '允许上传';break;
+            case "assess": return '允许上传(要考核)';break;
+          }
+        },
+        allowFileter(value){
+          switch(value){
+            case ",yes,": return '创建、上传';break;
+            case ",yes,nofile,": return '创建、禁止上传';break;
+            case ",no,": return '禁止创建、禁止上传';break;
+          }
         }
+
       },
       created(){
         //登录验证
@@ -729,14 +796,15 @@
   .btnPanel {
     position: relative;
     width: 433px;
-    height: 28px;
+    /*height: 28px;*/
+    height: auto;
+    overflow:hidden;
     padding: 5px;
     border-left: 1px solid #58B7FF;
     border-right: 1px solid #58B7FF;
   }
   .btnPanel .btnLeft {
     float: left;
-    line-height: 28px;
     width: 65%;
   }
   .btnPanel .btnLeft span {

@@ -15,16 +15,19 @@
         </div>
         <div class="button-group">
           <el-button-group>
-            <el-button type="primary" icon="plus" size="small" @click="addItem">添加</el-button>
-            <el-button type="primary" icon="edit" size="small" @click="editItem">编辑</el-button>
-            <el-button type="primary" icon="delete" size="small" @click="delItem">删除</el-button>
+            <el-button type="success" icon="plus" size="small" @click="addItem">添加</el-button>
+            <el-button type="success" icon="edit" size="small" @click="editItem">编辑</el-button>
+            <el-button type="success" icon="delete" size="small" @click="delItem">删除</el-button>
           </el-button-group>
           <el-button-group>
+            <el-tooltip class="item" effect="light" content="回到主页" placement="top">
+              <el-button type="primary"  size="small" @click="baseFun.gotoLink({ path:'/admin/main' })">退出</el-button>
+            </el-tooltip>
             <el-tooltip class="item" effect="light" content="回到考核总览设置" placement="top">
-              <el-button type="success"  size="small" @click="provStep">上一步</el-button>
+              <el-button type="primary"  size="small" @click="provStep">上一步</el-button>
             </el-tooltip>
             <el-tooltip class="item" effect="light" content="保存并进入评分设置" placement="top">
-              <el-button type="success"  size="small" @click="baseFun.gotoLink('new3')">下一步</el-button>
+              <el-button type="primary"  size="small" @click="baseFun.gotoLink('new3')">下一步</el-button>
             </el-tooltip>
           </el-button-group>
         </div>
@@ -189,7 +192,7 @@
       var node = this.$refs.trees.getCheckedNodes();
       if(this.isCheck(node)){
         //根目录不能修改
-        if(node[0].parent_id.length <=0 ){
+        if( !node[0].parent_id || node[0].parent_id.length <=0 ){
           this.$message({ message: '不能删除根目录！',type:'warning' ,duration:1500 });
           return false;
         }

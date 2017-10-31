@@ -66,9 +66,10 @@
             <el-collapse-item title="文件列表" name="1">
               <ul>
                 <li v-for="fileItem in filesList">
-                  <a :title='showFileCreator(fileItem.CREATOR)' >
+                  <a :title='showFileCreator(fileItem.CREATOR,fileItem.CREATETIME)' @click="downloadFile(fileItem.FILES_ID)" style="cursor:pointer">
                     <i class="el-icon-document"></i>
-                    <span :class=" {'colorRed' : fileItem.EXPIRE == 'yes'}" >{{ fileItem.FILENAME }} &nbsp;<el-tag type="primary" v-if="fileItem.DEPARTMENT == 'share'">s</el-tag></span>
+                    <span :class=" {'colorBlue' : fileItem.DEPARTMENT != 'share' }" >  &nbsp; {{ fileItem.FILENAME }}</span>
+                    <el-tag type="primary" v-if="fileItem.EXPIRE == 'yes' && fileItem.DEPARTMENT != 'share'">逾期</el-tag>
                   </a>
                 </li>
               </ul>
@@ -101,6 +102,7 @@
                      :default-expand-all = "true"
                      :v-loading = "resLoading"
                      class="tree-style"
+                     :render-content = 'renderContent'
                      @node-click="resNodeClick"
                      highlight-current
                      node-key = "id"
@@ -157,11 +159,20 @@
     store,
     methods: {
       renderContent(h,{ node ,data,store }){
-        return (
-          <span>
+        if(data.department != 'share'){
+          return (
+            <span style="color:blue">
              { node.label }
            </span >
-        )
+          )
+        }else{
+          return (
+            <span>
+             { node.label }
+           </span >
+          )
+        }
+
       },
       //节点点击事件
       workNodeClick(data,node,self){
@@ -170,30 +181,7 @@
         this.selectWorkItem = data;
         //console.log(data);
         //当前条目资源分类初始化
-        /*
-        let rPostUrl = '/webapi/getItemRes'
-        let rParams = {
-          session_id : this.user.sessionID ? this.user.sessionID : '',
-          subject_id :this.$route.params.subject_id ? this.$route.params.subject_id : '',
-          item_id :  this.selectWorkItem.id
-        }
-        this.$http.post(rPostUrl, qs.stringify(rParams)).then((d)=>{
-          if( d !=undefined && d.data.msg == 'success'){
-            if(d.data.value){
-              this.rData = Array.from(d.data.value);
-              this.rData = new Array(d.data.value);
-            }else{
-              this.rData = [];
-              this.selectResItem = {};
-            }
-          }else{
-            this.$message({ message: d.data.msg,type:'warning' ,duration:1500 });
-          }
-        }).catch((err)=>{
-          this.$message({ message:'服务器'+err,type:'error',duration:1500 });
-        });
-        this.resLoading = false;
-        */
+
         //获取资料上传和未上传部门
         let fileDepartUrl = "/webapi/get_Item_All_HasFiles_Department_Admin";
         let noFileDepartUrl = "/webapi/get_Item_All_HasNoFiles_Department_Admin";
@@ -206,7 +194,10 @@
             //console.log(d.data.value)
             this.fileDepartments = JSON.parse(d.data.value);
           }else{
+            this.rData = [];
             this.fileDepartments = [];
+            this.noFileDepartmentsSelect = '';
+            this.fileDepartmentsSelect =  '';
           }
         });
         this.$http.post(noFileDepartUrl,qs.stringify(departParmas)).then((d)=>{
@@ -214,7 +205,10 @@
             //console.log(d.data.value)
             this.noFileDepartments = JSON.parse(d.data.value);
           }else{
+            this.rData = [];
             this.noFileDepartments = [];
+            this.noFileDepartmentsSelect = '';
+            this.fileDepartmentsSelect =  '';
           }
         })
       },
@@ -258,7 +252,6 @@
           if( d !=undefined && d.data.msg == 'success' && d.data.value) {
             //显示文件列表
             var files = JSON.parse(d.data.value);
-            console.log(files);
             this.filesList = files;
           }else{
             this.filesList = [];
@@ -319,8 +312,18 @@
         });
         this.resLoading = false;
       },
-      showFileCreator(creator){
-        return '上传者：'+creator;
+      //文件列表悬浮提示
+      showFileCreator(creator,createTime){
+        return '上传者：'+creator +',  时间：' + createTime;
+      },
+      downloadFile(fileId){
+        let baseUrl = this.baseFun.baseURL;
+        let downParams = {
+          session_id : this.user.sessionID ? this.user.sessionID : '',
+          files_id : fileId,
+          department : this.fileDepartmentsSelect
+        }
+        window.location.href = baseUrl + "/webapi/getFile_Department_Admin?session_id=" + downParams.session_id + "&files_id=" + downParams.files_id + "&department=" + downParams.department;
       }
 
     },
@@ -457,8 +460,8 @@
     margin-bottom: 8px;
     display:block;
   }
-  .colorRed{
-    color:red;
+  .colorBlue{
+    color:blue;
   }
 </style>
 

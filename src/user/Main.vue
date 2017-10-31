@@ -2,32 +2,42 @@
   <div class="main">
     <div class="topContent">
       <h2>党建工作过程考核目录</h2>
-      <h3>信息工程学院党总支</h3>
+      <h4>{{ $store.state.user.department }}</h4>
     </div>
     <div class="bodyContent">
       <div class="btn-menu">
 
       </div>
       <div class="main-table">
-        <el-table :data="workData" border>
-          <el-table-column prop="year" label="年度" sortable width="90"></el-table-column>
+        <el-table :data="currentData" border>
+          <el-table-column prop="YEAR" label="年度" width="90"></el-table-column>
           <el-table-column  label="标题" width="330">
             <template scope="scope">
-              <el-button type="text" @click="gotoLink('process')">{{ scope.row.title }}</el-button>
+              <el-button type="text" @click="baseFun.gotoLink({ path:'/user/process/' + scope.row.SUBJECT_ID })">{{ scope.row.NAME }}</el-button>
             </template>
           </el-table-column>
-          <el-table-column prop="state" label="状态" width="70"></el-table-column>
-          <el-table-column prop="beginDate" label="开始"  width="110"></el-table-column>
-          <el-table-column prop="endDate" label="结束"  width="110"></el-table-column>
-          <el-table-column prop="score" label="得分"  width="70"></el-table-column>
-          <el-table-column prop="total" label="总分"  width="70" fixed="right"></el-table-column>
+          <el-table-column prop="STATUS" label="状态" width="70"></el-table-column>
+          <el-table-column label="开始"  width="110">
+            <template scope="scope">
+              {{ dateFormate(scope.row.STARTTIME) }}
+            </template>
+          </el-table-column>
+          <el-table-column label="结束"  width="110">
+            <template scope="scope">
+              {{ dateFormate(scope.row.ENDTIME) }}
+            </template>
+          </el-table-column>
+          <el-table-column  label="得分"  width="70">0</el-table-column>
+          <el-table-column  label="总分"  width="70" fixed="right">100</el-table-column>
         </el-table>
       </div>
 
       <div class="pagination">
         <el-pagination
           layout="prev, pager, next"
-          :total="70">
+          :page-size = "pageSize"
+          :total="workLength"
+          @current-change="handleCurChange">
         </el-pagination>
       </div>
       <div class="help">
@@ -40,59 +50,61 @@
   </div>
 </template>
 <script>
-  import router from '../router'
+  import store from '../common/store.js'
+  import qs from 'qs'
   export default {
     name: 'usermain',
     data() {
       return {
-        workData:[
-          {
-            id: '1',
-            year: '2017',
-            title: '2017年基层党建工作目标考核指标体系（一）',
-            state: '制定',
-            beginDate:'2017-1-1',
-            endDate:'2017-12-31',
-            score: 56,
-            total:100
-          },
-          {
-            id: '2',
-            year: '2016',
-            title: '2016年基层党建工作目标考核指标体系（一）',
-            state: '发布',
-            beginDate:'2016-1-1',
-            endDate:'2016-6-30',
-            score: 96,
-            total:100
-          },
-          {
-            id: '3',
-            year: '2016',
-            title: '2016年基层党建工作目标考核指标体系（二）',
-            state: '维护',
-            beginDate:'2016-7-1',
-            endDate:'2016-12-31',
-            score: 90,
-            total:100
-          },
-          {
-            id: '4',
-            year: '2015',
-            title: '2015年基层党建工作目标考核指标体系（一）',
-            state: '完成',
-            beginDate:'2015-1-1',
-            endDate:'2015-12-31',
-            score: 91,
-            total:100
-          }
-        ]
+        workData:[],
+        currentData:[],
+        workLength: 0,
+        pageSize: 5,
+        currentPage: 1
       }
     },
+    store,
     methods: {
-      gotoLink(link){
-        router.push(link);
+      //页码发生变化
+      handleCurChange(evl){
+        this.currentPage = evl;
+        this.currentData = this.baseFun.pagination(evl,this.pageSize,this.workData);
+      },
+      dateFormate(dateValue){
+        var tempDate = new Date(dateValue);
+        return tempDate.getFullYear() + "-" + ( tempDate.getMonth() + 1) + "-" + tempDate.getDate();
       }
+    },
+    beforeCreate(){
+      //登录验证
+      this.baseFun.isLoginGoTo();
+      //防止刷新数据丢失
+      store.commit('initialUser');
+      store.commit('initNewParty');
+    },
+    mounted(){
+      //获取当前部门下的所有考核workData
+      this.$http.post('/webapi/getAllParties_Department',qs.stringify({'session_id':this.$store.state.user.sessionID,'department':this.$store.state.user.department})).then((d)=>{
+        if(d !== undefined && d.data.msg == 'success'){
+          if(d.data.value){
+            this.workData = JSON.parse(d.data.value);
+            this.workLength = this.workData.length;
+            this.currentData = this.baseFun.pagination(this.currentPage,this.pageSize,this.workData);
+          }
+        }else{
+          this.$message({
+            message: d.data.msg,
+            type: 'warning',
+            duration: 1500
+          });
+        }
+      }).catch((err)=>{
+        this.$message({
+          message: err,
+          type: 'warning',
+          duration: 1500
+        });
+      })
     }
   }
 </script>
