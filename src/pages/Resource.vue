@@ -182,7 +182,6 @@
   </div>
 </template>
 <script>
-  import leftSteps from '../components/LeftSteps.vue'
   import store from '../common/store.js'
   import qs from 'qs'
 
@@ -255,7 +254,7 @@
         },
         //资源树节点渲染
         renderResourceContent(h,{ node,data,store}){
-          console.log(data);
+          //console.log(data);
           let txt = "this is a test";
           return (
             <a title={ txt }>
@@ -496,10 +495,6 @@
                   }
                 });
               }
-
-
-
-
             }
           });
         },
@@ -587,7 +582,7 @@
             //清空已上传文件变量
             this.fileList = [];
             //获取已上传文件
-            let getUrl = "/webapi/getFilesListt";
+            let getUrl = "/webapi/getFilesList";
             let getParams = {
               session_id :  this.user.sessionID ? this.user.sessionID : '',
               item_directory_id : this.selectResItem ? this.selectResItem.id : ''
@@ -694,6 +689,7 @@
         }
         this.$http.post(postUrl, qs.stringify(params)).then((d)=>{
           if( d !=undefined && d.data.msg == 'success'){
+            //console.log( d.data.value)
             this.data = Array.from(d.data.value);
             this.data = new Array(d.data.value);
           }else{

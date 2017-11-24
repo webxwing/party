@@ -144,7 +144,7 @@
         //清空备选数组,筛选已选部门,留下未选部门,直接存入备选数组
         this.departList = [];
         this.allDepartments.map( _ =>{
-          //遍历每一个部门，假设每一个未选 _
+          //遍历每一个部门，假设每一个未选
           let temp = false;
           this.chooseList.map(d=>{
             if(d.name == _.department){
@@ -160,9 +160,9 @@
             })
           }
         })
-        //console.log(this.departList);
-        //console.log(this.chooseList);
-        //console.log(this.allDepartments);
+        //console.log(this.departList);//[{disabled:false,id:'1',name:'1'}]
+        //console.log(this.chooseList);//['1','2']
+        //console.log(this.allDepartments);//[{department:'1'},{department:'2'}]
         this.departLoading = false;
         this.dialogVisible = true;
       },
@@ -173,8 +173,8 @@
         let session_id = this.user.sessionID ? this.user.sessionID : '';
         let subject_id = this.newParty.subjectID ? this.newParty.subjectID : '';
         let item_id = this.selectNodeData ? this.selectNodeData.id : '';
+        let resultTempDepartList = [];
         if(direction == 'right'){
-
           keyArr.map((dep)=>{
             let addParams = {
               session_id ,
@@ -183,23 +183,57 @@
               item_id
             };
             this.$http.post(addUrl,qs.stringify(addParams)).then((d)=>{
-             if( d != undefined  && d.data.message=="success"){
-
+             if( d != undefined  && d.data.msg!="success"){
+               this.$message({ message: d.data.msg,type:'warning' ,duration:1500 });
+               //记录失败的部门
+              resultTempDepartList.push(dep);
+               //console.log(dep);
              }
+            }).then(()=>{
+              //撤销
+              resultTempDepartList.forEach((dep)=>{
+                this.chooseList = this.chooseList.filter((d)=>{
+                  return d!= dep;
+                });
+                this.departList.push({
+                  id: dep ,
+                  name: dep ,
+                  disabled : 'true'
+                });
+              });
             });
           });
-        }else if(direction == 'left'){
-          keyArr.map((dep)=>{
+
+        }else if(direction == 'left') {
+          keyArr.map((dep) => {
             let delParams = {
-              session_id ,
-              subject_id ,
-              department : dep,
+              session_id,
+              subject_id,
+              department: dep,
               item_id
             };
-            this.$http.post(delUrl,qs.stringify(delParams)).then((d)=>{
-              if( d != undefined  && d.data.message=="success"){
-
+            this.$http.post(delUrl, qs.stringify(delParams)).then((d) => {
+              if (d != undefined && d.data.msg != "success") {
+                this.$message({message: d.data.msg, type: 'warning', duration: 1500});
+                //记录失败部门
+                //this.departList.push(dep);
+                resultTempDepartList.push(dep);
               }
+            }).then(() => {
+              //撤销
+              //console.log(resultTempDepartList);
+              resultTempDepartList.forEach((dep) => {
+                /*
+                this.departList = this.departList.filter((d) => {
+                  return d.name != dep;
+                });
+                */
+                //去重
+                this.chooseList.push(dep);
+                this.chooseList = this.chooseList.concat().sort().filter(function(item,index,ary){
+                  return !index || item != ary[index-1];d
+                });
+              });
             });
           });
         }

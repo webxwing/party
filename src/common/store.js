@@ -7,15 +7,7 @@ const state = {
   newParty: { }
 };
 const mutations = {
-  add(state){
-    state.count++;
-  },
-  reduce(state){
-    state.count--;
-  },
-  editSessionID(state){
 
-  },
   //初始化用户信息
   initialUser(state){
     state.user.name = window.sessionStorage.getItem('name');

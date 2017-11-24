@@ -24,7 +24,7 @@
             <el-button type="text" size="small" @click="baseFun.gotoLink({ name : 'new',params:{ row : scope.row } })">编辑</el-button>
             <el-button type="text" size="small" @click="delParty(scope.row.SUBJECT_ID)">删除</el-button>
             <el-button type="text" size="small" @click="baseFun.gotoLink({ path: '/admin/resource/'+scope.row.SUBJECT_ID})">资源设置</el-button>
-            <el-button type="text" size="small" @click="baseFun.gotoLink('process')">过程设置</el-button>
+            <el-button type="text" size="small" @click="baseFun.gotoLink({ name: 'process',params:{ row : scope.row } })">过程设置</el-button>
 
           </template>
         </el-table-column>
@@ -67,7 +67,7 @@
       },
       computed:{
         workLength(){
-          return this.workData? this.workData.length:0;
+          return this.workData ? this.workData.length:0;
         }
       },
       store,

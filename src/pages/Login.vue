@@ -29,6 +29,7 @@
     <el-form-item label="角 色：">
       <el-select v-model="form.selectActor" placeholder="请选择用户的类型">
         <el-option key="admin" value="管理员">管理员</el-option>
+        <el-option key="grade" value="评分人">评分人</el-option>
         <el-option key="user" value="普通用户">普通用户</el-option>
       </el-select>
     </el-form-item>
@@ -71,7 +72,6 @@
 //          baseFun.gotoLink({ path:'/admin/main' });
 //        },1800);
 //      }
-
     },
     methods: {
       login(formName){
@@ -98,6 +98,8 @@
                   this.baseFun.gotoLink({ path:'/admin/main' });
                 }else if(this.form.selectActor == '普通用户'){
                   this.baseFun.gotoLink({ path:'/user/main' });
+                }else if(this.form.selectActor == '评分人'){
+                  this.baseFun.gotoLink({ path:'/grade/index' });
                 }else{
                   this.$message({message:'没有选择任何角色!',type:'error',duration:1500});
                 }

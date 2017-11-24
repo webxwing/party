@@ -11,6 +11,7 @@ import New4 from '@/pages/New4.vue'
 import Resource from '@/pages/Resource.vue'
 import Process from '@/pages/Process.vue'
 import ProcessNew from '@/pages/ProcessNew.vue'
+import ProcessEdit from '@/pages/ProcessEdit.vue'
 import Detail from '@/pages/Detail.vue'
 import ChooseWork from '@/components/ChooseWork.vue'
 import ProcessGrade from '@/pages/ProcessGrade.vue'
@@ -20,6 +21,9 @@ import UserMain from '@/user/Main.vue'
 import UserProcess from '@/user/Process.vue'
 
 import Upload from '@/pages/upload.vue'
+
+import GradeIndex from '@/grade/index.vue'
+import Operate from '@/grade/Operate.vue'
 
 Vue.use(Router)
 
@@ -36,15 +40,19 @@ export default new Router({
     { path: '/admin/new4', name:'new4', component: New4 },
     { path: '/admin/detail/:subject_id', name:'detail', component: Detail },
     { path: '/admin/resource/:subject_id', name:'resource', component: Resource },
-    { path: '/admin/process', name:'process', component: Process },
+    { path: '/admin/process/', name:'process', component: Process },
     { path: '/admin/processnew', name:'processnew', component: ProcessNew },
+    { path: '/admin/processedit/:assess_id',name:'processedit',component:ProcessEdit},
     { path: '/admin/choosework', name:'choosework', component: ChooseWork },
-    { path: '/admin/processgrade', name:'processgrade', component: ProcessGrade }
+    { path: '/admin/processgrade/:assess_id', name:'processgrade', component: ProcessGrade }
     ,
     { path:'/user/login',name:'userlogin',component:Login},
     { path:'/user/main',name:'usermain',component:UserMain },
     { path:'/user/process/:subject_id',name:'userprocess',component:UserProcess }
     ,
     { path:'/user/upload',name:'userupload',component:Upload }
+    ,
+    { path:'/grade/index',name:'gradeindex',component:GradeIndex },
+    { path:'/grade/operate',name:'gradeoperate',component:Operate }
   ]
 })

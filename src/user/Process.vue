@@ -288,7 +288,7 @@
             //显示文件列表
             var files = JSON.parse(d.data.value);
             this.filesList = files;
-            console.log(this.filesList);
+            //console.log(this.filesList);
           }else{
             this.filesList = [];
 
@@ -481,7 +481,7 @@
           //console.log(response,file);
           //接收回调中文件ID
           file["file_id"] = response.value;
-          console.log(file);
+          //console.log(file);
           this.filesList.push({
             FILENAME : file.name,
             FILES_ID : file.file_id
