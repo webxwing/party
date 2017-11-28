@@ -53,6 +53,5 @@ export default new Router({
     { path:'/user/upload',name:'userupload',component:Upload }
     ,
     { path:'/grade/index',name:'gradeindex',component:GradeIndex },
-    { path:'/grade/operate',name:'gradeoperate',component:Operate }
-  ]
+    { path:'/grade/operate/:assess_id',name:'gradeoperate',component:Operate }  ]
 })

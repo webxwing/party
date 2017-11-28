@@ -20,7 +20,7 @@
 
           <el-table-column fixed="right" label="操作"  width="100">
             <template scope="scope">
-              <el-button type="text" size="small" @click="baseFun.gotoLink({ name : 'gradeoperate',params:{ row : scope.row } })">考核</el-button>
+              <el-button type="text" size="small" @click="baseFun.gotoLink({ path:'/grade/operate/'+scope.row.ASSESS_ID})">考核</el-button>
             </template>
           </el-table-column>
         </el-table>
@@ -102,6 +102,7 @@
                     type: 'warning',
                     duration: 1500
                   });
+                  loading.close();
                 }
               })
               .catch((d)=>{
@@ -110,6 +111,7 @@
                   type: 'error',
                   duration: 1500
                 });
+                loading.close();
               });
         /*
             //518da9e9-7b1f-49d1-9740-6641c8bdf242

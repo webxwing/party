@@ -146,7 +146,6 @@
   </div>
 </template>
 <script>
-  import leftSteps from '../components/LeftSteps.vue'
   import store from '../common/store.js'
   import qs from 'qs'
   export default {
