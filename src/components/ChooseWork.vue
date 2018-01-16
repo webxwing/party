@@ -187,7 +187,7 @@
       }
     }
 </script>
-<style>
+<style scoped>
   .choose-work {
     max-width: 600px;
     min-height: 300px;

@@ -12,7 +12,7 @@ const isLoginGoTo = function(){
   let sessionID = window.sessionStorage.getItem('sessionID');
   let department = window.sessionStorage.getItem('department');
   if( name==null || name.length <=0 || sessionID == null || sessionID.length <=0 ){
-    this.gotoLink('login');
+    this.gotoLink({ path: '/admin/login/'  });
     return false;
   }else{
     return true;

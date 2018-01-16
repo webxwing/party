@@ -12,24 +12,33 @@
     <div class="main-table">
       <el-table :data="currentData" border>
         <el-table-column prop="YEAR" label="年度" width="100"></el-table-column>
-        <el-table-column label="标题" width="400">
+        <el-table-column label="标题" width="390">
           <template scope="scope">
             <el-button type="text" @click="baseFun.gotoLink({ path:'/admin/detail/' + scope.row.SUBJECT_ID })">{{ scope.row.NAME }}</el-button>
           </template>
         </el-table-column>
-        <el-table-column prop="STATUS" label="状态" width="100"></el-table-column>
+        <el-table-column prop="STATUS" label="状态" width="78"></el-table-column>
 
-        <el-table-column fixed="right" label="操作"  width="250">
+        <el-table-column fixed="right" label="操作"  width="280">
           <template scope="scope">
             <el-button type="text" size="small" @click="baseFun.gotoLink({ name : 'new',params:{ row : scope.row } })">编辑</el-button>
             <el-button type="text" size="small" @click="delParty(scope.row.SUBJECT_ID)">删除</el-button>
             <el-button type="text" size="small" @click="baseFun.gotoLink({ path: '/admin/resource/'+scope.row.SUBJECT_ID})">资源设置</el-button>
             <el-button type="text" size="small" @click="baseFun.gotoLink({ name: 'process',params:{ row : scope.row } })">过程设置</el-button>
-
+            <el-button type="text" size="small" @click="showResult(scope.row.SUBJECT_ID)">结果</el-button>
           </template>
         </el-table-column>
       </el-table>
     </div>
+
+    <el-dialog title="详细结果" :visible.sync="dialogTableVisible">
+      <el-table :data="resultData">
+        <el-table-column property="DEPARTMENT" label="部门" width="170"></el-table-column>
+        <el-table-column property="name" label="名称" width="260"></el-table-column>
+        <el-table-column property="value" label="总分" width="80"></el-table-column>
+        <el-table-column property="department_assess_value" label="得分" width="80"></el-table-column>
+      </el-table>
+    </el-dialog>
 
     <div class="pagination">
       <el-pagination
@@ -46,8 +55,12 @@
       <p>发布：用户可读写访问（对处于评分状态的条目只能只读访问）</p>
       <p>完成：用户只读访问</p>
     </div>
+
+
+
   </div>
 </div>
+
 </template>
 <script>
     import store from '../common/store.js'
@@ -62,7 +75,11 @@
           currentData:[],
           total: 1000,
           pageSize: 5,
-          currentPage: 1
+          currentPage: 1,
+          //弹窗数据
+          resultData:[],
+          //弹窗taggle
+          dialogTableVisible:false
         }
       },
       computed:{
@@ -103,16 +120,35 @@
               }
             })
           });
+        },
+        //弹窗事件
+        showResult(subject_id){
+          this.$http.post('/webapi/getAllDeaprtment_Value_List',qs.stringify({'session_id':this.$store.state.user.sessionID,'subject_id': subject_id}))
+            .then((d)=>{
+              if( d !=undefined && d.data.msg == 'success'){
+                let val = JSON.parse(d.data.value);
+                if(val.length > 0){
+                  this.resultData = val;
+                  this.dialogTableVisible = true;
+                }else{
+                  this.resultData = [];
+                  this.dialogTableVisible = false;
+                }
+              }else{
+                this.$message({ message: d.data.msg,type:'warning' ,duration:1500 });
+              }
+            });
         }
       },
-      beforeCreate(){
+
+      mounted(){
         //登录验证
         this.baseFun.isLoginGoTo();
         //防止刷新数据丢失
         store.commit('initialUser');
         store.commit('initNewParty');
-      },
-      mounted(){
+        //更新数据
+        this.user = store.state.user;
         //获取当前部门下的所有考核workData
         let loading = this.$loading({text:"加载中..."});
         this.$http.post('/webapi/getAllParties',qs.stringify({'session_id':this.$store.state.user.sessionID,'department':this.$store.state.user.department})).then((d)=>{

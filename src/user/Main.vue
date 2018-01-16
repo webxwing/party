@@ -17,21 +17,32 @@
             </template>
           </el-table-column>
           <el-table-column prop="STATUS" label="状态" width="70"></el-table-column>
-          <el-table-column label="开始"  width="110">
+          <el-table-column label="开始"  width="115">
             <template scope="scope">
               {{ dateFormate(scope.row.STARTTIME) }}
             </template>
           </el-table-column>
-          <el-table-column label="结束"  width="110">
+          <el-table-column label="结束"  width="115">
             <template scope="scope">
               {{ dateFormate(scope.row.ENDTIME) }}
             </template>
           </el-table-column>
-          <el-table-column  label="得分"  width="70">0</el-table-column>
-          <el-table-column  label="总分"  width="70" fixed="right">100</el-table-column>
+          <el-table-column fixed="right" label="操作"    width="135">
+            <template scope="scope">
+              <el-button type="text" size="small" @click="baseFun.gotoLink({ path: '/user/processResult/'+scope.row.SUBJECT_ID})">查看活动</el-button>
+              <el-button type="text" size="small" @click="showResult(scope.row.SUBJECT_ID)">得分</el-button>
+            </template>
+          </el-table-column>
         </el-table>
       </div>
-
+      <el-dialog title="详细结果" :visible.sync="dialogTableVisible">
+        <el-table :data="resultData">
+          <el-table-column property="DEPARTMENT" label="部门" width="170"></el-table-column>
+          <el-table-column property="name" label="名称" width="260"></el-table-column>
+          <el-table-column property="value" label="总分" width="80"></el-table-column>
+          <el-table-column property="department_assess_value" label="得分" width="80"></el-table-column>
+        </el-table>
+      </el-dialog>
       <div class="pagination">
         <el-pagination
           layout="prev, pager, next"
@@ -60,7 +71,11 @@
         currentData:[],
         workLength: 0,
         pageSize: 5,
-        currentPage: 1
+        currentPage: 1,
+        //弹窗数据
+        resultData:[],
+        //弹窗taggle
+        dialogTableVisible:false
       }
     },
     store,
@@ -73,19 +88,53 @@
       dateFormate(dateValue){
         var tempDate = new Date(dateValue);
         return tempDate.getFullYear() + "-" + ( tempDate.getMonth() + 1) + "-" + tempDate.getDate();
+      },
+      getValue(subjectId){
+        //ef0bf342-550e-479b-971c-7914be8219ac
+
+        /*this.$http.post('/webapi/getAllAssess_List',qs.stringify({'session_id':this.$store.state.user.sessionID,'subject_id':subjectId,'department':this.$store.state.user.department}))
+          .then((d)=>{
+            console.log(d.data.value);
+          })
+         this.$http.post('/webapi/getAllDeaprtment_Value',qs.stringify({'session_id':this.$store.state.user.sessionID,'subject_id':subjectId,'department':this.$store.state.user.department}))
+          .then((d)=>{
+            console.log(d.data.value);
+          });*/
+        this.$http.post('/webapi/getAllAssess_Deaprtment_Value',qs.stringify({'session_id':this.$store.state.user.sessionID,'assess_id':'ef0bf342-550e-479b-971c-7914be8219ac','department':this.$store.state.user.department}))
+          .then((d)=>{
+            //console.log(d.data.value);
+          })
+      },
+      //弹窗事件
+      showResult(subject_id){
+        this.$http.post('/webapi/getAllDeaprtment_Value_List',qs.stringify({'session_id':this.$store.state.user.sessionID,'subject_id': subject_id}))
+          .then((d)=>{
+            if( d !=undefined && d.data.msg == 'success'){
+              let val = JSON.parse(d.data.value);
+              if(val.length > 0){
+                this.resultData = val;
+                this.dialogTableVisible = true;
+              }else{
+                this.resultData = [];
+                this.dialogTableVisible = false;
+              }
+            }else{
+              this.$message({ message: d.data.msg,type:'warning' ,duration:1500 });
+            }
+          });
       }
     },
-    beforeCreate(){
+    mounted(){
       //登录验证
       this.baseFun.isLoginGoTo();
       //防止刷新数据丢失
       store.commit('initialUser');
       store.commit('initNewParty');
-    },
-    mounted(){
+
       //获取当前部门下的所有考核workData
       this.$http.post('/webapi/getAllParties_Department',qs.stringify({'session_id':this.$store.state.user.sessionID,'department':this.$store.state.user.department})).then((d)=>{
         if(d !== undefined && d.data.msg == 'success'){
+
           if(d.data.value){
             this.workData = JSON.parse(d.data.value);
             this.workLength = this.workData.length;
@@ -104,7 +153,8 @@
           type: 'warning',
           duration: 1500
         });
-      })
+      });
+      this.getValue(51);
     }
   }
 </script>

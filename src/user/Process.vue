@@ -157,7 +157,7 @@
         rData: [],
         defaultProps: {
           children: 'children',
-          label: 'name',
+          label: 'name'
         },
         //默认展开
         defaultChecked: [1],

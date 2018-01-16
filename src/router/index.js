@@ -15,10 +15,13 @@ import ProcessEdit from '@/pages/ProcessEdit.vue'
 import Detail from '@/pages/Detail.vue'
 import ChooseWork from '@/components/ChooseWork.vue'
 import ProcessGrade from '@/pages/ProcessGrade.vue'
+import Result from '@/pages/Result.vue'
 
 import UserLogin from '@/user/Login.vue'
 import UserMain from '@/user/Main.vue'
 import UserProcess from '@/user/Process.vue'
+import UserProcessRst from '@/user/ProcessResult.vue'
+import UserResult from '@/user/Result.vue'
 
 import Upload from '@/pages/upload.vue'
 
@@ -44,11 +47,14 @@ export default new Router({
     { path: '/admin/processnew', name:'processnew', component: ProcessNew },
     { path: '/admin/processedit/:assess_id',name:'processedit',component:ProcessEdit},
     { path: '/admin/choosework', name:'choosework', component: ChooseWork },
-    { path: '/admin/processgrade/:assess_id', name:'processgrade', component: ProcessGrade }
+    { path: '/admin/processgrade/:assess_id', name:'processgrade', component: ProcessGrade },
+    { path: '/admin/result/:assess_id', name:'result', component: Result }
     ,
     { path:'/user/login',name:'userlogin',component:Login},
     { path:'/user/main',name:'usermain',component:UserMain },
-    { path:'/user/process/:subject_id',name:'userprocess',component:UserProcess }
+    { path:'/user/process/:subject_id',name:'userprocess',component:UserProcess },
+    { path:'/user/processResult/:subject_id',name:'userprocess',component:UserProcessRst },
+    { path:'/user/userResult/:assess_id',name:'userprocess',component:UserResult }
     ,
     { path:'/user/upload',name:'userupload',component:Upload }
     ,

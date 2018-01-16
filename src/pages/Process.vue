@@ -27,13 +27,14 @@
               <span>{{ dateFormate(scope.row.STARTTIME) +' - '+ dateFormate(scope.row.ENDTIME) }}</span>
             </template>
           </el-table-column>
-          <el-table-column prop="NAME" label="活动名称" width="380"></el-table-column>
+          <el-table-column prop="NAME" label="活动名称" width="350"></el-table-column>
           <el-table-column prop="STATUS" label="状态" width="100"></el-table-column>
-          <el-table-column fixed="right" label="操作"  width="200">
+          <el-table-column fixed="right" label="操作"  width="240">
             <template scope="scope">
               <el-button type="text" size="small" @click="baseFun.gotoLink({path:'/admin/processedit/' + scope.row.ASSESS_ID  })">编辑内容</el-button>
               <el-button type="text" size="small" @click="baseFun.gotoLink({path:'/admin/processgrade/' + scope.row.ASSESS_ID })">评分设置</el-button>
               <el-button type="text" size="small" @click="delAssess(scope.row.ASSESS_ID)">删除</el-button>
+              <el-button type="text" size="small" @click="baseFun.gotoLink({ path:'/admin/result/' + scope.row.ASSESS_ID })">得分</el-button>
             </template>
           </el-table-column>
         </el-table>

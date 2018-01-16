@@ -56,9 +56,7 @@
               <span>所选资源：{{  showResName  }}</span>
             </div>
             <div class="btnRight">
-              <el-select v-model="selectDepart" placeholder="请选择被考核部门" @change="selectDepChange">
-                <el-option v-for="dep in allEnableDeps" :key="dep.id" :label="dep.department" :value="dep.department">{{ dep.department }}</el-option>
-              </el-select>
+              <span>{{  selectDepart  }} </span>
             </div>
           </div>
           <el-tree :data="rData"
@@ -118,9 +116,7 @@
             {{ selectNodeData.name.length <= 20 ? selectNodeData.name :  selectNodeData.name.slice(0,20) + '...'  }}
           </el-form-item>
           <el-form-item label="部门" label-width="50px">
-            <el-select v-model="form.department" placeholder="请选择被考核部门" >
-                <el-option v-for="dep in allEnableDeps" :key="dep.id" :label="dep.department" :value="dep.department">{{ dep.department }}</el-option>
-              </el-select>
+            <span>{{ selectDepart }}</span>
           </el-form-item>
           <el-form-item label="分值:" label-width="50px">
             <el-input-number v-model="form.score" :step="2" :min="0" :max="100"></el-input-number>
@@ -131,12 +127,28 @@
         </el-form>
 
         <div class="dialog-footer">
-          <el-button @click="gradeDialogClose">取 消</el-button>
+          <el-button @click="gradeDialogClose">清 空</el-button>
           <el-button type="primary" @click="gradeSubmit">确 定</el-button>
         </div>
 
       </el-dialog>
-
+      <el-dialog
+        title="请先选择考核部门"
+        :close-on-click-modal = "false"
+        size="small"
+        :show-close="false"
+        :visible.sync="dialogDepVisible">
+          <el-row>
+            <el-col :span="8">
+              <p>考核部门：</p>
+            </el-col>
+            <el-col :span="16">
+              <el-select v-model="selectDepart" placeholder="请选择被考核部门" @change="selectDepChange">
+                <el-option v-for="dep in allEnableDeps" :key="dep.DEPARTMENT" :label="dep.DEPARTMENT" :value="dep.DEPARTMENT">{{ dep.DEPARTMENT }}</el-option>
+              </el-select>
+            </el-col>
+          </el-row>
+      </el-dialog>
     </div>
   </div>
 </span>
@@ -185,7 +197,9 @@
           //选择的部门
           selectDepart:'',
           //可供选择的部门
-          allEnableDeps:[]
+          allEnableDeps:[],
+          //部门选择对话框
+          dialogDepVisible: true
         }
       },
     methods:{
@@ -224,6 +238,7 @@
 
         }
         */
+        /*
         //获取被考核部门
         this.$http.post('/webapi/getAssess_Man_RelevantDepartment_List',qs.stringify({
           session_id:this.user.sessionID,
@@ -233,9 +248,9 @@
           .then((d)=>{
             this.allEnableDeps = [];
             this.selectDepart = '';
-            if(d&&d.data.code!='-1'){
+            if( d && d.data.code!='-1'){
               let tempData = JSON.parse(d.data.value);
-              if(tempData&&tempData.length>0){
+              if(tempData && tempData.length>0){
                 tempData.map((dep)=>{
                   this.allEnableDeps.push({
                     id: dep.RELEVANT_DEPARTMENT_ID,
@@ -245,7 +260,7 @@
               }
             }
           });
-
+        */
         /*
         //获取当前选择资源目录树
         this.resLoading = true;
@@ -274,9 +289,37 @@
         });
       */
 
+        //获取当前选择部门下的资源目录树  getAllAssess_Item_ManForDepartment
+        let rPostUrl = '/webapi/getAssessItemRes_Man';
+        let rParams = {
+          session_id : store.state.user.sessionID ? store.state.user.sessionID : '',
+          assess_id: this.$route.params ? this.$route.params.assess_id :  '',
+          item_id: data.id,
+          department: this.selectDepart
+        };
+        this.$http.post(rPostUrl, qs.stringify(rParams)).then((d)=>{
+          if( d && d.data.code!='-1'){
+            if( d.data.value ){
+              this.rData = new Array(d.data.value);
+            }
+            else {
+              this.rData = [];
+            }
+            //console.log(this.rData);
+          }else if(d && d.data.code =='-1'){
+            this.rData = []
+          }
+          this.resLoading = false;
+        }).catch((err)=>{
+          this.$message({ message:'服务器'+err,type:'error',duration:1500 });
+          this.resLoading = false;
+        });
+
       },
       //部门下拉事件
       selectDepChange(val){
+        this.dialogDepVisible = false;
+        /*
         //console.log(this.selectNodeData);
         //获取当前选择部门下的资源目录树
         this.resLoading = true;
@@ -300,14 +343,32 @@
           this.resLoading = false;
         });
 
-
-
+      */
+        let postUrl = '/webapi/getAllAssess_Item_ManForDepartment';
+        let postParams = {
+          session_id:this.user.sessionID,
+          assess_id: this.$route.params ? this.$route.params.assess_id :  '',
+          department: this.selectDepart
+        };
+        this.$http.post(postUrl,qs.stringify(postParams))
+          .then((d)=>{
+            if(d&&d.data.code!='-1'){
+              this.data = new Array(d.data.value);
+              if(this.data.length > 0){
+                this.defaultChecked = new Array(this.data[0].id);
+              }
+            }else if( d && d.data.code=='-1'){
+              this.$message({message:d.data.msg,type:'warning',duration:1500});
+            }
+          }).catch((err)=>{
+          this.$message({message:err,type:'warning',duration:1500});
+        })
       },
+      //资源节点点击
       resNodeClick(data,node,self){
         this.$refs.resource.setCheckedKeys([]);
         node.checked = true;
         this.selectResItem = data;
-
         /*
         //getAssessFile_Man session_id assess_id files_id department
         let getFilesUrl = "/webapi/getAssessFile_Man";
@@ -371,31 +432,27 @@
       //对话框确认
       gradeSubmit(){
         //department
-        if(this.form.department && this.form.department.length > 0){
-          //updateAssess_Department(session_id,assess_id,item_id, department,value,memo)
-          let setUrl = "/webapi/updateAssess_Department/";
-          let setParams = {
-            session_id:this.user.sessionID,
-            assess_id: this.$route.params ? this.$route.params.assess_id :  '',
-            item_id: this.selectNodeData.id,
-            department: this.form.department,
-            value: this.form.score,
-            memo: this.form.content
-          };
-          this.$http.post(setUrl,qs.stringify(setParams))
-            .then((d)=>{
-              if(d&&d.data.code!='-1'){
-                this.$message({ message:'设置成功！',type:'success',duration:1500 });
-              }else if(d&&d.data.code=='-1'){
-                this.$message({  message:d.data.msg,type:'warning',duration:1500 });
-              }
-            })
-            .catch((err)=>{
-              this.$message( { message:err,type:'error',duation:1500 } );
-            })
-        }else{
-          this.$message({ message:'请先选择被考核部门。',type:'warning',duration:1500 })
-        }
+        //updateAssess_Department(session_id,assess_id,item_id, department,value,memo)
+        let setUrl = "/webapi/updateAssess_Department/";
+        let setParams = {
+          session_id:this.user.sessionID,
+          assess_id: this.$route.params ? this.$route.params.assess_id :  '',
+          item_id: this.selectNodeData.id,
+          department: this.selectDepart,
+          value: this.form.score,
+          memo: this.form.content
+        };
+        this.$http.post(setUrl,qs.stringify(setParams))
+          .then((d)=>{
+            if(d&&d.data.code!='-1'){
+              this.$message({ message:'设置成功！',type:'success',duration:1500 });
+            }else if(d&&d.data.code=='-1'){
+              this.$message({  message:d.data.msg,type:'warning',duration:1500 });
+            }
+          })
+          .catch((err)=>{
+            this.$message( { message:err,type:'error',duation:1500 } );
+          })
       },
       //点击上传按钮
       uploadClass(){
@@ -489,9 +546,43 @@
       //打分
       gradeClick(){
         if(!this.selectNodeData || this.selectNodeData.id.length <= 0 ){
-            this.$message({ message:'请先选择考核活动条目',type:'warning',durationg:1500});
+            this.$message({ message:'请先选择考核活动条目！',type:'warning', duration:1500});
             return false;
         }
+        if(this.selectNodeData.children){
+          this.$message({ message:'该项目不能评分！',type:'warning',duration:1500});
+          return false;
+        }
+
+        //获取分数
+        let postUrl = '/webapi/getAssess_Department_Value/'
+        let setParams = {
+          session_id:this.user.sessionID,
+          assess_id: this.$route.params ? this.$route.params.assess_id :  '',
+          item_id: this.selectNodeData.id,
+          department: this.selectDepart
+        };
+        this.$http.post(postUrl,qs.stringify(setParams))
+          .then((d)=>{
+            if( d && d.data.code!='-1'){
+              var grades = JSON.parse(d.data.value);
+              if(grades && grades.length == 1){
+                this.form.score = grades[0].value;
+                this.form.content = grades[0].memo;
+              }else{
+                this.form.score = 0;
+                this.form.content = '';
+              }
+            }else if( d && d.data.code=='-1'){
+              this.form.score = 0;
+              this.form.content = '';
+            }
+          })
+          .catch((err)=>{
+            this.$message( { message:err,type:'error',duation:1500 } );
+          });
+
+
         this.dialogGrade = true;
       }
 
@@ -499,7 +590,6 @@
     computed: {
       showResName: function(){
         if(this.selectResItem  && this.selectResItem.name){
-
           if(this.selectResItem.name.length >18 ){
             return this.selectResItem.name.slice(0,18) + '...';
           }else{
@@ -512,33 +602,37 @@
 
     },
     created() {
-        //登录验证
-        this.baseFun.isLoginGoTo();
-        //防止刷新数据丢失
-        store.commit('initialUser');
-        //更新数据
-        this.user = store.state.user;
-        //console.log(this.$route.params);
+      //登录验证
+      this.baseFun.isLoginGoTo();
+      //防止刷新数据丢失
+      store.commit('initialUser');
+      //更新数据
+      this.user = store.state.user;
+      //console.log(this.$route.params);
 
-        let postUrl = '/webapi/getAllAssess_Item_Man';
-        let postParams = {
-          session_id:this.user.sessionID,
-          assess_id: this.$route.params ? this.$route.params.assess_id :  ''
-        };
-        this.$http.post(postUrl,qs.stringify(postParams))
-          .then((d)=>{
-            if(d&&d.data.code!='-1'){
-              this.data = new Array(d.data.value);
-              if(this.data.length > 0){
-                this.defaultChecked = new Array(this.data[0].id);
-              }else if(d&&d.data.code=='-1'){
-                this.$message({message:d.data.msg,type:'warning',duration:1500});
-              }
+
+      //选择考核部门
+      let selectDepUrl = '/webapi/getAllAssessDepartmentList_Man';
+      //let postUrl = '/webapi/getAllAssess_Item_Man';
+      let postParams = {
+        session_id:this.user.sessionID,
+        assess_id: this.$route.params ? this.$route.params.assess_id :  ''
+      };
+
+
+      this.$http.post(selectDepUrl,qs.stringify(postParams))
+        .then((d)=>{
+          if(d&&d.data.code!='-1') {
+            this.allEnableDeps = JSON.parse(d.data.value) ;
+            if(this.allEnableDeps.length > 0){
+            }else if(d&&d.data.code=='-1'){
+              this.$message({message:d.data.msg,type:'warning',duration:1500});
             }
-          }).catch((err)=>{
-          this.$message({message:err,type:'warning',duration:1500});
+          }
         })
-        }
+
+
+      }
     }
 </script>
 <style scoped>
@@ -592,11 +686,12 @@
     line-height:44px;
     width: 65%;
   }
-  .btnPanel .btnLeft span {
+  .btnPanel .btnLeft span, .btnPanel .btnRight span {
     margin-top: 5px;
   }
   .btnPanel .btnRight {
     text-align: right;
+    line-height:44px;
     float: right;
     width: 35%;
   }
